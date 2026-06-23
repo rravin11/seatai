@@ -1,7 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
 .venv/
 venv/
-__pycache__/
-*.pyc
+env/
+ENV/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS metadata
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets/local config
 .env
-yolo11n.pt
+.env.*
+!.env.example
+
+# Model weights and exports
+*.pt
+*.pth
+*.onnx
+*.engine
+*.torchscript
+models/weights/
+weights/
+
+# Generated output
+outputs/
+runs/
+results/
+predictions/
+*.avi
+*.mov
+*.mp4
+
+# Raw datasets can be large; keep YAML and labels, ignore images
+seat_seg_dataset/images/
+datasets/**/images/
+data/raw/
+data/videos/
+
+# Temporary files
+.tmp/
+tmp/
+temp/
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build/coverage
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
