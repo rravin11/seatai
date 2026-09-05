@@ -111,9 +111,6 @@ def load_prelabels(prelabels_root: Path, frames_root: Path) -> dict[str, list[di
                         "id": f"prelabel-{session_id}-{source}-{detection_index}",
                         "label": map_model_label(detection),
                         "bbox_xywh": [float(value) for value in box],
-                        "source": "prelabel",
-                        "model_label": detection.get("label", "unknown"),
-                        "model_score": detection.get("score"),
                     }
                 )
     return mapped
@@ -143,13 +140,36 @@ def build_dataset(frames_root: Path, prelabels_root: Path) -> dict[str, Any]:
     return {
         "schema_version": "seatvision-box-annotations/v1",
         "annotation_note": (
-            "Human-reviewed boxes only. Labels are chair, table, object. "
+            "Reviewed boxes only. Labels are chair, table, object. "
             "These boxes do not establish seat-surface segmentation or occupancy state."
         ),
         "frames_root": str(frames_root),
         "categories": list(LABELS),
         "images": images,
     }
+
+
+def simplify_annotation_metadata(dataset: dict[str, Any]) -> bool:
+    """Discard model/provenance subtype fields from an existing local review file.
+
+    The reviewer sees and edits only the three agreed classes. Keeping detector
+    names such as cup/handbag or an edit-source field would make the annotation
+    task look like a finer-grained classification task when it is not.
+    """
+    changed = False
+    for image in dataset.get("images", []):
+        simplified: list[dict[str, Any]] = []
+        for annotation in image.get("annotations", []):
+            clean = {
+                "id": annotation.get("id"),
+                "label": annotation.get("label"),
+                "bbox_xywh": annotation.get("bbox_xywh"),
+            }
+            if annotation != clean:
+                changed = True
+            simplified.append(clean)
+        image["annotations"] = simplified
+    return changed
 
 
 def validate_dataset(dataset: dict[str, Any]) -> None:
@@ -243,16 +263,16 @@ function setStatus(text){document.getElementById('status').textContent=text}
 function markDirty(){dirty=true; setStatus('Unsaved changes')}
 function bboxAt(x,y){for(const box of [...entry().annotations].reverse()){const [bx,by,bw,bh]=box.bbox_xywh;if(x>=bx&&x<=bx+bw&&y>=by&&y<=by+bh)return box}return null}
 function point(event){const r=canvas.getBoundingClientRect();return {x:(event.clientX-r.left)*canvas.width/r.width,y:(event.clientY-r.top)*canvas.height/r.height}}
-function draw(){if(!dataset||!image.complete)return;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0);for(const box of entry().annotations){const [x,y,w,h]=box.bbox_xywh;ctx.save();ctx.strokeStyle=colors[box.label];ctx.lineWidth=selected===box.id?6:3;ctx.setLineDash(box.source==='prelabel'?[10,5]:[]);ctx.strokeRect(x,y,w,h);ctx.setLineDash([]);ctx.font='bold 22px sans-serif';const text=box.label+(box.source==='prelabel'?' · proposal':'');const tw=ctx.measureText(text).width+12;ctx.fillStyle=colors[box.label];ctx.fillRect(x,Math.max(0,y-28),tw,28);ctx.fillStyle='#111';ctx.fillText(text,x+6,Math.max(22,y-7));ctx.restore()}if(drawing){const{x,y,w,h}=drawing;ctx.save();ctx.strokeStyle=colors[defaultLabel];ctx.lineWidth=3;ctx.setLineDash([8,5]);ctx.strokeRect(x,y,w,h);ctx.restore()}renderList()}
-function renderList(){const holder=document.getElementById('annotations');holder.replaceChildren();if(!dataset)return;const boxes=entry().annotations;if(!boxes.length){holder.innerHTML='<p class="empty">No boxes. Drag to add an annotation.</p>';return}for(const box of boxes){const button=document.createElement('button');button.className='annotation '+(selected===box.id?'selected':'');button.innerHTML='<span class="badge">'+box.label+'</span> '+(box.source==='prelabel'?'proposal':'human')+'<small>'+box.bbox_xywh.map(v=>Math.round(v)).join(', ') +(box.model_label?' · model: '+box.model_label:'')+'</small>';button.onclick=()=>{selected=box.id;draw()};holder.append(button)}}
+function draw(){if(!dataset||!image.complete)return;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0);for(const box of entry().annotations){const [x,y,w,h]=box.bbox_xywh;ctx.save();ctx.strokeStyle=colors[box.label];ctx.lineWidth=selected===box.id?6:3;ctx.strokeRect(x,y,w,h);ctx.font='bold 22px sans-serif';const text=box.label;const tw=ctx.measureText(text).width+12;ctx.fillStyle=colors[box.label];ctx.fillRect(x,Math.max(0,y-28),tw,28);ctx.fillStyle='#111';ctx.fillText(text,x+6,Math.max(22,y-7));ctx.restore()}if(drawing){const{x,y,w,h}=drawing;ctx.save();ctx.strokeStyle=colors[defaultLabel];ctx.lineWidth=3;ctx.setLineDash([8,5]);ctx.strokeRect(x,y,w,h);ctx.restore()}renderList()}
+function renderList(){const holder=document.getElementById('annotations');holder.replaceChildren();if(!dataset)return;const boxes=entry().annotations;if(!boxes.length){holder.innerHTML='<p class="empty">No boxes. Drag to add an annotation.</p>';return}for(const box of boxes){const button=document.createElement('button');button.className='annotation '+(selected===box.id?'selected':'');button.innerHTML='<span class="badge">'+box.label+'</span><small>'+box.bbox_xywh.map(v=>Math.round(v)).join(', ')+'</small>';button.onclick=()=>{selected=box.id;draw()};holder.append(button)}}
 function loadImage(){selected=null;const e=entry();document.getElementById('title').textContent=(current+1)+' / '+dataset.images.length+' · '+e.file;document.getElementById('review').textContent=e.reviewed?'Reviewed ✓':'Mark reviewed';document.getElementById('review').className=e.reviewed?'reviewed':'unreviewed';setStatus(dirty?'Unsaved changes':(e.reviewed?'Reviewed':'Needs review'));image=new Image();image.onload=()=>{canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;draw()};image.src=imageUrl()}
-function applyLabel(label){defaultLabel=label;document.querySelectorAll('[data-label]').forEach(b=>b.classList.toggle('active',b.dataset.label===label));const box=annotation();if(box){box.label=label;box.source='human';delete box.model_label;delete box.model_score;markDirty();draw()}}
+function applyLabel(label){defaultLabel=label;document.querySelectorAll('[data-label]').forEach(b=>b.classList.toggle('active',b.dataset.label===label));const box=annotation();if(box){box.label=label;markDirty();draw()}}
 function deleteSelected(){if(!selected)return;entry().annotations=entry().annotations.filter(a=>a.id!==selected);selected=null;markDirty();draw()}
 async function save(){const response=await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dataset)});const body=await response.json();if(!response.ok)throw Error(body.error||'save failed');dirty=false;setStatus('Saved '+body.path)}
 async function exportCoco(){const response=await fetch('/api/export-coco',{method:'POST'});const body=await response.json();if(!response.ok)throw Error(body.error||'export failed');setStatus('Exported '+body.path+' · '+body.images+' reviewed images')}
 canvas.addEventListener('mousedown',event=>{const p=point(event),hit=bboxAt(p.x,p.y);if(hit){selected=hit.id;drawing=null;draw();return}selected=null;drawing={x:p.x,y:p.y,w:0,h:0};draw()});
 canvas.addEventListener('mousemove',event=>{if(!drawing)return;const p=point(event);drawing.w=p.x-drawing.x;drawing.h=p.y-drawing.y;draw()});
-canvas.addEventListener('mouseup',event=>{if(!drawing)return;const p=point(event);let{x,y,w,h}=drawing;w=p.x-x;h=p.y-y;if(w<0){x+=w;w=-w}if(h<0){y+=h;h=-h}drawing=null;if(w>=8&&h>=8){const box={id:'human-'+crypto.randomUUID(),label:defaultLabel,bbox_xywh:[x,y,w,h],source:'human'};entry().annotations.push(box);selected=box.id;markDirty()}draw()});
+canvas.addEventListener('mouseup',event=>{if(!drawing)return;const p=point(event);let{x,y,w,h}=drawing;w=p.x-x;h=p.y-y;if(w<0){x+=w;w=-w}if(h<0){y+=h;h=-h}drawing=null;if(w>=8&&h>=8){const box={id:'box-'+crypto.randomUUID(),label:defaultLabel,bbox_xywh:[x,y,w,h]};entry().annotations.push(box);selected=box.id;markDirty()}draw()});
 document.getElementById('previous').onclick=()=>{if(current>0){current--;loadImage()}};document.getElementById('next').onclick=()=>{if(current<dataset.images.length-1){current++;loadImage()}};document.getElementById('review').onclick=()=>{entry().reviewed=!entry().reviewed;markDirty();loadImage()};document.getElementById('save').onclick=()=>save().catch(e=>setStatus('Save error: '+e.message));document.getElementById('export').onclick=()=>exportCoco().catch(e=>setStatus('Export error: '+e.message));document.getElementById('delete').onclick=deleteSelected;document.querySelectorAll('[data-label]').forEach(b=>b.onclick=()=>applyLabel(b.dataset.label));
 window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();save().catch(e=>setStatus('Save error: '+e.message));return}if(event.target.tagName==='INPUT')return;const key=event.key.toLowerCase();if(key==='c')applyLabel('chair');if(key==='t')applyLabel('table');if(key==='o')applyLabel('object');if(event.key==='Delete'||event.key==='Backspace')deleteSelected();if(event.key==='ArrowLeft'&&current>0){current--;loadImage()}if(event.key==='ArrowRight'&&current<dataset.images.length-1){current++;loadImage()}});
 fetch('/api/dataset').then(r=>r.json()).then(data=>{dataset=data;applyLabel(defaultLabel);loadImage()}).catch(e=>setStatus('Load error: '+e.message));
@@ -358,7 +378,10 @@ def main() -> int:
     args = parse_arguments()
     if args.output.is_file():
         dataset = json.loads(args.output.read_text(encoding="utf-8"))
+        simplified = simplify_annotation_metadata(dataset)
         validate_dataset(dataset)
+        if simplified:
+            json_write_atomic(args.output, dataset)
         print(f"Resuming annotations: {args.output}")
     else:
         dataset = build_dataset(args.frames_root, args.prelabels_root)

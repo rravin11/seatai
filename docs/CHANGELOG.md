@@ -20,6 +20,8 @@
   sampling runs with near-duplicate filtering.
 - Local browser annotation GUI with the simplified human-reviewed box taxonomy:
   `chair`, `table`, and `object`; reviewed frames export as COCO JSON.
+- Removed detector subtype and edit-provenance fields from the annotation GUI
+  and local review JSON so every visible box is only chair, table, or object.
 
 ### Changed
 

@@ -108,7 +108,9 @@ Use the local browser GUI to turn proposals into human-reviewed box labels.
 The deliberately small first taxonomy is exactly `chair`, `table`, and
 `object`. Existing `chair`/`bench`/`couch` proposals become `chair`, `dining
 table` becomes `table`, and every other generic proposal becomes `object` for
-you to accept, relabel, delete, or redraw.
+you to accept, relabel, delete, or redraw. The GUI intentionally hides and
+removes detector subtype/provenance metadata (for example `cup`, `proposal`,
+or `human`) so it cannot leak into this simple annotation task.
 
 ~~~bash
 python3 scripts/label_training_data.py --open-browser
