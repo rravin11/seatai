@@ -12,6 +12,8 @@
 - Offline recursive image ingestion, annotated output, prediction manifests,
   HTML reports, and optional COCO-style evaluation in the dataset lab.
 - Native GStreamer `appsink` capture probe for isolated IMX219/Argus diagnosis.
+- Local video-to-frame preparation workflow for consented phone/MIPI recordings
+  with TensorRT chair/person proposals and explicit human-review manifests.
 
 ### Changed
 

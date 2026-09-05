@@ -2,3 +2,5 @@ build/
 runs/
 datasets/
 models/
+video_training_data/*
+!video_training_data/README.md

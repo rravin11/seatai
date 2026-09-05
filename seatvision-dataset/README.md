@@ -71,3 +71,27 @@ seats.
 
 --label-alias FROM=TO is available only for an intentional, auditable taxonomy
 mapping; it never creates a model capability by itself.
+
+## Prepare phone or MIPI recordings for labeling
+
+Place consented recordings in `video_training_data/` and use the local video
+preparation script. It samples still frames, runs the current TensorRT baseline
+as a proposal generator, and creates a review gallery plus JSONL review
+records. It does not turn a generic detector estimate into ground truth.
+
+For the current two recordings—eight physical seats in both, with one and four
+known occupied seats respectively—replace the filenames in:
+
+~~~bash
+python3 scripts/prepare_video_training_data.py \
+  --video "first_video.mov=1" \
+  --video "second_video.mov=4" \
+  --expected-seat-count 8 \
+  --sample-fps 1
+~~~
+
+The baseline can miss chairs, usable seat surfaces, people, and occlusions.
+`expected-seat-count` and the supplied expected occupancy counts are therefore
+session-level quality checks only. Review and correct each selected frame in
+CVAT before making final segmentation/occupancy training annotations. See
+`video_training_data/README.md` for output layout and privacy/Git boundaries.

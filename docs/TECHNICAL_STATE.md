@@ -109,6 +109,13 @@ cmake --build build -j"$(nproc)"
 Images can be placed in `seatvision-dataset/datasets/inbox/`; images, model
 plans, reports, events, and build artifacts are intentionally ignored by Git.
 
+Phone or MIPI recordings for custom-model collection belong in
+`seatvision-dataset/video_training_data/`. The preparation script samples them
+into still frames and creates generic-model chair/person/occupancy proposals
+for human review. The physical eight-seat count and supplied one/four occupied
+counts are session-level checks, never substituted for individual verified
+seat labels.
+
 ## Verification baseline
 
 The following checks passed on 2026-09-04:
