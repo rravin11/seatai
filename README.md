@@ -10,6 +10,40 @@ The current prototype combines:
 
 The next development milestone is live camera support with object tracking and temporal smoothing.
 
+## Jetson projects
+
+The production work is split into two independently buildable CMake projects:
+
+- `seatvision/` is the real-time dual-MIPI Argus/TensorRT application (`seatvisiond`).
+- `seatvision-dataset/` is the offline still-image lab (`seatvision-dataset`). It recursively ingests large image folders, writes annotated images and JSON reports, and optionally scores COCO annotations. It never opens cameras or emits temporal occupancy states.
+
+Build the live application:
+
+```bash
+cd seatvision
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build build -j"$(nproc)"
+```
+
+Build the still-image validator separately:
+
+```bash
+cd seatvision-dataset
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build build -j"$(nproc)"
+./build/seatvision-dataset --input /path/to/images --output runs/baseline-001
+```
+
+The default dataset config uses the same device-specific TensorRT engine as the
+live app. See `seatvision-dataset/README.md` for COCO metrics, reports, and the
+current taxonomy limitation: the generic model has `dining table`, not `desk`.
+
+For the verified Jetson hardware/software state, capture diagnosis, current
+model limits, and validation evidence, see [Technical state](docs/TECHNICAL_STATE.md).
+All completed engineering slices follow the documented
+[development workflow](docs/DEVELOPMENT_WORKFLOW.md) and are recorded in the
+[changelog](docs/CHANGELOG.md).
+
 ## Current pipeline
 
 ```text
@@ -65,6 +99,33 @@ seatai/
 - Internet access on the first run so model weights can download
 
 On Apple Silicon, PyTorch can use the `mps` device. On NVIDIA systems, PyTorch can use CUDA.
+
+### NVIDIA Jetson Orin (JetPack 7.2)
+
+Use the Jetson-specific manifest on a Jetson running JetPack 7.2 (L4T R39.2,
+Ubuntu 24.04, Python 3.12, CUDA 13). It reuses JetPack's OpenCV build, which
+includes GStreamer and V4L2 camera support. Installing `opencv-python` from
+PyPI instead can replace that build and break CSI-camera pipelines.
+
+```bash
+cd seatai
+python3 -m venv --system-site-packages .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements-jetson.txt
+```
+
+Verify the CUDA runtime before running a model:
+
+```bash
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+```
+
+It should print `True` for CUDA availability and identify the Orin GPU. First
+model runs also need network access to download the YOLO and Depth Anything
+weights. Camera availability is separate: connect the camera and check that a
+`/dev/video*` device appears, or use the relevant GStreamer pipeline for a CSI
+camera.
 
 ## Installation
 

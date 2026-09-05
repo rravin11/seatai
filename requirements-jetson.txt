@@ -1,0 +1,20 @@
+# NVIDIA Jetson Orin on JetPack 7.2 (Python 3.12 / CUDA 13)
+#
+# Create the virtual environment with --system-site-packages so it can reuse
+# JetPack's OpenCV build. Do not install opencv-python from PyPI here: its
+# wheel can omit Jetson's GStreamer/CSI-camera integration.
+
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+# CUDA-enabled ARM64 wheels validated for JetPack 7.2 / Python 3.12.
+torch==2.13.0+cu130
+torchvision==0.28.0+cu130
+
+# Application dependencies. Keep these separate from requirements.txt because
+# that generic manifest includes a PyPI OpenCV package for desktop platforms.
+ultralytics>=8.3
+numpy>=1.26
+Pillow>=10.0
+transformers>=4.45
+PyYAML>=6.0
+tqdm>=4.66

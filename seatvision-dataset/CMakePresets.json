@@ -1,0 +1,21 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "jetson-release",
+      "displayName": "Jetson Dataset Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/jetson-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "jetson-release", "configurePreset": "jetson-release", "jobs": 4 }
+  ],
+  "testPresets": [
+    { "name": "jetson-release", "configurePreset": "jetson-release", "output": { "outputOnFailure": true } }
+  ]
+}

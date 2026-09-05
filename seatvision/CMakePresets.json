@@ -1,0 +1,32 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "jetson-release",
+      "displayName": "Jetson Release",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/jetson-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "jetson-debug",
+      "displayName": "Jetson Debug",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/jetson-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "jetson-release", "configurePreset": "jetson-release", "jobs": 4 },
+    { "name": "jetson-debug", "configurePreset": "jetson-debug", "jobs": 4 }
+  ],
+  "testPresets": [
+    { "name": "jetson-release", "configurePreset": "jetson-release", "output": { "outputOnFailure": true } }
+  ]
+}
