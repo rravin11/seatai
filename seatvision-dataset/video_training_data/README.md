@@ -16,8 +16,9 @@ python3 scripts/prepare_video_training_data.py \
   --sample-fps 1
 ```
 
-The number after `=` is the known session-level occupied-seat count supplied by
-the operator. It is not treated as a per-chair ground-truth label.
+The number after `=` is optional. When known, it is the session-level
+occupied-seat count supplied by the operator; it is not treated as a per-chair
+ground-truth label. Omit it for a review-only prelabel run.
 
 The command creates:
 

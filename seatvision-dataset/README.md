@@ -95,3 +95,5 @@ The baseline can miss chairs, usable seat surfaces, people, and occlusions.
 session-level quality checks only. Review and correct each selected frame in
 CVAT before making final segmentation/occupancy training annotations. See
 `video_training_data/README.md` for output layout and privacy/Git boundaries.
+If the one-versus-four mapping is not yet known for a filename, omit `=COUNT`
+for that video to create review-only proposals without inventing a label.

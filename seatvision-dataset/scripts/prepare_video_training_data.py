@@ -40,19 +40,21 @@ VIDEO_EXTENSIONS = {".mov", ".mp4", ".m4v", ".avi"}
 class VideoSession:
     source: Path
     session_id: str
-    expected_occupied_count: int
+    expected_occupied_count: int | None
 
 
 def parse_session(value: str, data_dir: Path) -> VideoSession:
-    if "=" not in value:
-        raise argparse.ArgumentTypeError("--video expects FILENAME=EXPECTED_OCCUPIED, for example room_a.mov=1")
-    filename, occupied_text = value.rsplit("=", 1)
-    try:
-        expected_occupied_count = int(occupied_text)
-    except ValueError as exc:
-        raise argparse.ArgumentTypeError("EXPECTED_OCCUPIED must be an integer") from exc
-    if expected_occupied_count < 0:
-        raise argparse.ArgumentTypeError("EXPECTED_OCCUPIED must be non-negative")
+    filename, separator, occupied_text = value.rpartition("=")
+    if not separator:
+        filename = value
+        expected_occupied_count = None
+    else:
+        try:
+            expected_occupied_count = int(occupied_text)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError("EXPECTED_OCCUPIED must be an integer") from exc
+        if expected_occupied_count < 0:
+            raise argparse.ArgumentTypeError("EXPECTED_OCCUPIED must be non-negative")
     source = (data_dir / filename).resolve()
     try:
         source.relative_to(data_dir.resolve())
@@ -75,8 +77,8 @@ def parse_arguments() -> argparse.Namespace:
         "--video",
         action="append",
         required=True,
-        metavar="FILENAME=EXPECTED_OCCUPIED",
-        help="Repeat per recording; expected count is a session-level review check, not ground truth.",
+        metavar="FILENAME[=EXPECTED_OCCUPIED]",
+        help="Repeat per recording; an optional expected count is a session-level review check, not ground truth.",
     )
     parser.add_argument("--expected-seat-count", type=int, default=8, help="Known physical seat count (default: 8)")
     parser.add_argument("--sample-fps", type=float, default=1.0, help="Frames sampled per second (default: 1)")
@@ -104,7 +106,7 @@ def parse_arguments() -> argparse.Namespace:
     if len(set(session_ids)) != len(session_ids):
         parser.error("Video filenames resolve to duplicate session IDs; rename one recording")
     for session in args.sessions:
-        if session.expected_occupied_count > args.expected_seat_count:
+        if session.expected_occupied_count is not None and session.expected_occupied_count > args.expected_seat_count:
             parser.error(f"{session.source.name}: expected occupied count exceeds expected seat count")
         if not session.source.is_file():
             parser.error(f"Video not found: {session.source}")
@@ -210,7 +212,7 @@ def person_association_score(person: dict[str, Any], chair: dict[str, Any]) -> f
     return min(1.0, 0.55 + 0.45 * overlap / normalization)
 
 
-def create_review_records(predictions_path: Path, expected_seats: int, expected_occupied: int) -> list[dict[str, Any]]:
+def create_review_records(predictions_path: Path, expected_seats: int, expected_occupied: int | None) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for line in predictions_path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -268,7 +270,8 @@ def write_review_html(path: Path, records: list[dict[str, Any]], prelabels_dir: 
             "<article><strong>" + html.escape(record["source"]) + "</strong><br>"
             + f"<small>Detector: {observation['detected_chair_candidates']} chair candidates, "
             + f"{observation['detected_people']} people, {observation['heuristic_occupied_count']} occupancy proposals. "
-            + f"Session check: {context['expected_occupied_count']} occupied of {context['physical_seat_count']} seats.</small>"
+            + f"Session check: {context['expected_occupied_count'] if context['expected_occupied_count'] is not None else 'not set'} "
+            + f"occupied of {context['physical_seat_count']} seats.</small>"
             + image
             + "<p>Review required — do not treat this proposal as ground truth.</p></article>"
         )
@@ -293,7 +296,8 @@ def main() -> int:
     for session in args.sessions:
         print(
             f"  {session.source.name}: session={session.session_id}, "
-            f"known session occupancy={session.expected_occupied_count}/{args.expected_seat_count}"
+            f"known session occupancy={session.expected_occupied_count if session.expected_occupied_count is not None else 'not set'}"
+            f"/{args.expected_seat_count}"
         )
     if args.dry_run:
         return 0

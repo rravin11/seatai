@@ -14,6 +14,8 @@
 - Native GStreamer `appsink` capture probe for isolated IMX219/Argus diagnosis.
 - Local video-to-frame preparation workflow for consented phone/MIPI recordings
   with TensorRT chair/person proposals and explicit human-review manifests.
+- Review-only video preparation for recordings whose known session occupancy
+  count has not yet been matched to a specific filename.
 
 ### Changed
 
