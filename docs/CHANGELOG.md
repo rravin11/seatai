@@ -18,6 +18,8 @@
   count has not yet been matched to a specific filename.
 - Object-on-seat review proposals for common belongings, plus named 2-FPS
   sampling runs with near-duplicate filtering.
+- Local browser annotation GUI with the simplified human-reviewed box taxonomy:
+  `chair`, `table`, and `object`; reviewed frames export as COCO JSON.
 
 ### Changed
 

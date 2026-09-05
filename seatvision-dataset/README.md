@@ -101,3 +101,26 @@ annotations. See `video_training_data/README.md` for output layout and
 privacy/Git boundaries.
 If the one-versus-four mapping is not yet known for a filename, omit `=COUNT`
 for that video to create review-only proposals without inventing a label.
+
+## Human annotation GUI: chair, table, object
+
+Use the local browser GUI to turn proposals into human-reviewed box labels.
+The deliberately small first taxonomy is exactly `chair`, `table`, and
+`object`. Existing `chair`/`bench`/`couch` proposals become `chair`, `dining
+table` becomes `table`, and every other generic proposal becomes `object` for
+you to accept, relabel, delete, or redraw.
+
+~~~bash
+python3 scripts/label_training_data.py --open-browser
+~~~
+
+It opens `http://127.0.0.1:8765/` on the Jetson and saves an editable local
+annotation file under `datasets/raw_videos/phone/human_annotations/`, which is
+ignored by Git. Click a box to select it; use Chair/Table/Object to change its
+class, drag empty image space to draw a new box, and Delete to remove a box.
+Mark a frame reviewed only after checking its useful boxes, then use **Export
+reviewed COCO**. The COCO JSON contains only reviewed images.
+
+This is a box-level detector dataset, not a seat-surface segmentation dataset
+or final occupancy ground truth. It gives us a simple, inspectable first model
+baseline; later we will add seat-surface masks and object-to-seat relationships.

@@ -116,6 +116,12 @@ proposals for human review. The physical eight-seat count and supplied one/four
 occupied counts are session-level checks, never substituted for individual
 verified seat labels.
 
+The first human-reviewed custom-detector taxonomy is intentionally constrained
+to `chair`, `table`, and `object`. `label_training_data.py` is a local browser
+GUI that imports generic-model proposals, permits human box edits, and exports
+only reviewed frames as COCO boxes. It is a bootstrap detector dataset, not
+seat-surface segmentation or a final available/object-claimed decision label.
+
 ## Verification baseline
 
 The following checks passed on 2026-09-04:
