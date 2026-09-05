@@ -87,13 +87,17 @@ python3 scripts/prepare_video_training_data.py \
   --video "first_video.mov=1" \
   --video "second_video.mov=4" \
   --expected-seat-count 8 \
-  --sample-fps 1
+  --sample-fps 2 \
+  --run-id object-claim-2fps
 ~~~
 
-The baseline can miss chairs, usable seat surfaces, people, and occlusions.
-`expected-seat-count` and the supplied expected occupancy counts are therefore
-session-level quality checks only. Review and correct each selected frame in
-CVAT before making final segmentation/occupancy training annotations. See
-`video_training_data/README.md` for output layout and privacy/Git boundaries.
+The baseline can miss chairs, usable seat surfaces, people, belongings, and
+occlusions. It creates separate person-on-chair and object-on-seat proposals;
+the latter considers common COCO belongings but can still confuse an object on
+a table with an object on a chair. `expected-seat-count` and supplied occupancy
+counts are therefore session-level quality checks only. Review and correct each
+selected frame in CVAT before making final segmentation/occupancy training
+annotations. See `video_training_data/README.md` for output layout and
+privacy/Git boundaries.
 If the one-versus-four mapping is not yet known for a filename, omit `=COUNT`
 for that video to create review-only proposals without inventing a label.

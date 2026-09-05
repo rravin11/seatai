@@ -16,6 +16,8 @@
   with TensorRT chair/person proposals and explicit human-review manifests.
 - Review-only video preparation for recordings whose known session occupancy
   count has not yet been matched to a specific filename.
+- Object-on-seat review proposals for common belongings, plus named 2-FPS
+  sampling runs with near-duplicate filtering.
 
 ### Changed
 
