@@ -1,5 +1,12 @@
 # SeatAI changelog
 
+## Unreleased
+
+### Changed
+
+- Made local annotation boxes selectable only from their outlines, so large
+  existing boxes no longer prevent overlapping or nested annotations.
+
 ## 2026-09-04 — Jetson camera integration and documented product baseline
 
 ### Added

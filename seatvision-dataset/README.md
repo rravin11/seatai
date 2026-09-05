@@ -118,10 +118,12 @@ python3 scripts/label_training_data.py --open-browser
 
 It opens `http://127.0.0.1:8765/` on the Jetson and saves an editable local
 annotation file under `datasets/raw_videos/phone/human_annotations/`, which is
-ignored by Git. Click a box to select it; use Chair/Table/Object to change its
-class, drag empty image space to draw a new box, and Delete to remove a box.
-Mark a frame reviewed only after checking its useful boxes, then use **Export
-reviewed COCO**. The COCO JSON contains only reviewed images.
+ignored by Git. Click a box outline to select it; its interior stays available
+to draw another box, including one that overlaps a table, chair, or object.
+Use Chair/Table/Object to change the selected box's class, drag to draw a new
+box, and Delete to remove a box. Mark a frame reviewed only after checking its
+useful boxes, then use **Export reviewed COCO**. The COCO JSON contains only
+reviewed images.
 
 This is a box-level detector dataset, not a seat-surface segmentation dataset
 or final occupancy ground truth. It gives us a simple, inspectable first model
